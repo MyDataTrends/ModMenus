@@ -1,12 +1,14 @@
 # Mod Menus
 
+**Download:** [Nexus Mods](https://www.nexusmods.com/skyrimspecialedition/mods/196763) or this repo's [releases](https://github.com/MyDataTrends/ModMenus/releases).
+
 One controller-friendly list that opens every mod-added menu. No more hunting for each mod's hotkey (or reaching for
 the keyboard): open **MOD MENUS** from the Tween menu, pick a category, pick a menu.
 
 - **The menus come from small entry files,** one per supported mod. A menu is only listed when its mod is installed.
 - **Keys are read from each mod's own config file every time you pick its menu.** Rebind a menu in its own settings
   and Mod Menus follows; there's nothing to set up here.
-- **Menus that don't support a controller** turn on [Pad Pointer](https://github.com/MyDataTrends/PadPointer) if you have
+- **Menus that don't support a controller** turn on [Pad Pointer](https://www.nexusmods.com/skyrimspecialedition/mods/196704) if you have
   it, so you can steer them with the left stick. Its Start button presses the menu's own close key.
 - Opens from Tween Menu Overhaul's **MOD MENUS** entry (last in its World section; you choose where in the MCM), the
   Pause key (configurable), or the mod event `ModMenus_Open` (bind it to anything that sends mod events).
@@ -81,7 +83,7 @@ in the entry format), which the mod never ships, so updates keep it.
 - [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444)
 - [UIExtensions](https://www.nexusmods.com/skyrimspecialedition/mods/17561) (the list menu)
 - Recommended: [Tween Menu Overhaul](https://www.nexusmods.com/skyrimspecialedition/mods/143275) (the MOD MENUS entry),
-  [Pad Pointer](https://github.com/MyDataTrends/PadPointer) (controller as a mouse in menus that need one),
+  [Pad Pointer](https://www.nexusmods.com/skyrimspecialedition/mods/196704) (controller as a mouse in menus that need one),
   [MCM Helper](https://www.nexusmods.com/skyrimspecialedition/mods/53000) and
   [SkyUI](https://www.nexusmods.com/skyrimspecialedition/mods/12604) (the settings page)
 
