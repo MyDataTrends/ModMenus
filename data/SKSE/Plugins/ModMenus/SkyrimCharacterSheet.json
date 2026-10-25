@@ -1,0 +1,21 @@
+{
+  "nexus": 56069,
+  "menus": [
+    {
+      "id": "charsheet",
+      "label": "Character Sheet",
+      "category": "Characters & Gear",
+      "requires": [
+        "SKSE/Plugins/SkyrimCharacterSheet.dll"
+      ],
+      "pointer": true,
+      "open": {
+        "key": {
+          "file": "SKSE/Plugins/SkyrimCharacterSheet/SkyrimCharacterSheet_input.json",
+          "json": "open_key_combination",
+          "format": "dik_list"
+        }
+      }
+    }
+  ]
+}

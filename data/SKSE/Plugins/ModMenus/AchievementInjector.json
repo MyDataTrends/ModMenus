@@ -1,0 +1,19 @@
+{
+  "nexus": 126220,
+  "menus": [
+    {
+      "id": "achievements",
+      "label": "Achievements",
+      "category": "Characters & Gear",
+      "requires": [
+        "SKSE/Plugins/AchievementInjector.dll"
+      ],
+      "pointer": true,
+      "open": {
+        "key": {
+          "fixed": "Shift+N"
+        }
+      }
+    }
+  ]
+}

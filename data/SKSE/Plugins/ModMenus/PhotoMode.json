@@ -1,0 +1,16 @@
+{
+  "nexus": 91701,
+  "menus": [
+    {
+      "id": "photomode",
+      "label": "Photo Mode",
+      "category": "Graphics",
+      "requires": [
+        "SKSE/Plugins/po3_PhotoMode.dll"
+      ],
+      "open": {
+        "modevent": "OpenTween_PhotoMode"
+      }
+    }
+  ]
+}

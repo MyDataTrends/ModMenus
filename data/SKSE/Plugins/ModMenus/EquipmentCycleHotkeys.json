@@ -1,0 +1,20 @@
+{
+  "nexus": 108602,
+  "menus": [
+    {
+      "id": "ech",
+      "label": "Equipment Cycle Hotkeys",
+      "category": "Mod Settings",
+      "requires": [
+        "SKSE/Plugins/EquipmentCycleHotkeys.dll"
+      ],
+      "open": {
+        "key": {
+          "file": "SKSE/Plugins/EquipmentCycleHotkeys.json",
+          "json": "menu_toggle_keysets.0",
+          "format": "name_list"
+        }
+      }
+    }
+  ]
+}

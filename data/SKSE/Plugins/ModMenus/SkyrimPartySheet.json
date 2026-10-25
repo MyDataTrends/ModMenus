@@ -1,0 +1,16 @@
+{
+  "nexus": 167538,
+  "menus": [
+    {
+      "id": "partysheet",
+      "label": "Party Sheet",
+      "category": "Characters & Gear",
+      "requires": [
+        "SKSE/Plugins/SkyrimPartySheet.dll"
+      ],
+      "open": {
+        "modevent": "PartySheet_Open"
+      }
+    }
+  ]
+}

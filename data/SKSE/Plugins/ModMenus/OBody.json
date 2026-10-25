@@ -1,0 +1,19 @@
+{
+  "nexus": 77016,
+  "menus": [
+    {
+      "id": "obody",
+      "label": "Body Presets (OBody)",
+      "category": "Characters & Gear",
+      "requires": [
+        "SKSE/Plugins/OBody.dll"
+      ],
+      "pointer": true,
+      "open": {
+        "key": {
+          "fixed": "Shift+O"
+        }
+      }
+    }
+  ]
+}

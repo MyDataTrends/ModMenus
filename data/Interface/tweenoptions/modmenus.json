@@ -1,0 +1,7 @@
+{
+	"papyrus_event": "ModMenus_Open",
+	"menuName": "MOD MENUS",
+	"icon": "skills",
+	"priority": 40,
+	"category": "bottom"
+}

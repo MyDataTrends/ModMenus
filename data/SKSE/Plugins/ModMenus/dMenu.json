@@ -1,0 +1,21 @@
+{
+  "nexus": 166751,
+  "menus": [
+    {
+      "id": "dmenu",
+      "label": "dMenu",
+      "category": "Mod Settings",
+      "requires": [
+        "SKSE/Plugins/dmenu.dll"
+      ],
+      "open": {
+        "key": {
+          "file": "SKSE/Plugins/dmenu/dmenu.ini",
+          "ini": "UI.key_toggle_dmenu",
+          "format": "dik",
+          "default": "Insert"
+        }
+      }
+    }
+  ]
+}

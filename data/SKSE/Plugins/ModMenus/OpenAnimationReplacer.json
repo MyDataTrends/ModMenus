@@ -1,0 +1,25 @@
+{
+  "nexus": 92109,
+  "menus": [
+    {
+      "id": "oar",
+      "label": "Open Animation Replacer",
+      "category": "Animation",
+      "requires": [
+        "SKSE/Plugins/OpenAnimationReplacer.dll"
+      ],
+      "pointer": true,
+      "open": {
+        "key": {
+          "file": "SKSE/Plugins/OpenAnimationReplacer.ini",
+          "ini": "UI.uToggleUIKey",
+          "format": "dik",
+          "shift": "UI.uToggleUIKeyShift",
+          "ctrl": "UI.uToggleUIKeyCtrl",
+          "alt": "UI.uToggleUIKeyAlt",
+          "default": "Shift+O"
+        }
+      }
+    }
+  ]
+}

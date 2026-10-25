@@ -1,0 +1,25 @@
+{
+  "nexus": 86492,
+  "menus": [
+    {
+      "id": "cs",
+      "label": "Community Shaders",
+      "category": "Graphics",
+      "requires": [
+        "SKSE/Plugins/CommunityShaders.dll"
+      ],
+      "pointer": true,
+      "open": {
+        "key": {
+          "file": [
+            "SKSE/Plugins/CommunityShaders/SettingsUser.json",
+            "SKSE/Plugins/CommunityShaders/SettingsDefault.json"
+          ],
+          "json": "Menu.ToggleKey",
+          "format": "vk",
+          "default": "End"
+        }
+      }
+    }
+  ]
+}

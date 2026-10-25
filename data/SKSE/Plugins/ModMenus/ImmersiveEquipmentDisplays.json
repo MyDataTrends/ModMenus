@@ -1,0 +1,21 @@
+{
+  "nexus": 62001,
+  "menus": [
+    {
+      "id": "ied",
+      "label": "Equipment Displays (IED)",
+      "category": "Characters & Gear",
+      "requires": [
+        "SKSE/Plugins/ImmersiveEquipmentDisplays.dll"
+      ],
+      "pointer": true,
+      "open": {
+        "key": {
+          "file": "SKSE/Plugins/ImmersiveEquipmentDisplays.ini",
+          "ini": "GUI.ToggleKeys",
+          "format": "dik_list"
+        }
+      }
+    }
+  ]
+}

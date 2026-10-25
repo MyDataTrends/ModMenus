@@ -1,0 +1,22 @@
+{
+  "nexus": 120352,
+  "menus": [
+    {
+      "id": "smf",
+      "label": "SKSE Menu Framework",
+      "category": "Mod Settings",
+      "requires": [
+        "SKSE/Plugins/SKSEMenuFramework.dll"
+      ],
+      "pointer": true,
+      "open": {
+        "key": {
+          "file": "SKSE/Plugins/SKSEMenuFramework.ini",
+          "ini": "General.ToggleKey",
+          "format": "key_name",
+          "default": "F1"
+        }
+      }
+    }
+  ]
+}

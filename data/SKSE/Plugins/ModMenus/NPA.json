@@ -1,0 +1,21 @@
+{
+  "nexus": 193575,
+  "menus": [
+    {
+      "id": "npa",
+      "label": "NPC Presets (NPA)",
+      "category": "Characters & Gear",
+      "requires": [
+        "SKSE/Plugins/NPA.dll"
+      ],
+      "pointer": true,
+      "open": {
+        "key": {
+          "file": "SKSE/Plugins/NPA.ini",
+          "ini": "UI.Hotkey",
+          "format": "combo_names"
+        }
+      }
+    }
+  ]
+}
