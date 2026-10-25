@@ -8,8 +8,9 @@ the keyboard): open **MOD MENUS** from the Tween menu, pick a category, pick a m
   and Mod Menus follows; there's nothing to set up here.
 - **Menus that don't support a controller** turn on [Pad Pointer](https://github.com/MyDataTrends/PadPointer) if you have
   it, so you can steer them with the left stick. Its Start button presses the menu's own close key.
-- Opens from Tween Menu Overhaul's **MOD MENUS** entry, the Pause key (configurable), or the mod event
-  `ModMenus_Open` (bind it to anything that sends mod events).
+- Opens from Tween Menu Overhaul's **MOD MENUS** entry (last in its World section; you choose where in the MCM), the
+  Pause key (configurable), or the mod event `ModMenus_Open` (bind it to anything that sends mod events).
+- **An MCM** to move the Tween entry, change the key, fix a menu's key, and add any menu that isn't listed.
 
 ## Supported out of the box
 | Category | Menu | Mod |
@@ -60,26 +61,38 @@ Drop a JSON file into `SKSE/Plugins/ModMenus/` (your mod can ship one). Example:
 - `pointer`: turn on Pad Pointer after opening (for menus without controller support).
 - What was found, skipped and read is written to `Documents/My Games/Skyrim Special Edition/SKSE/ModMenus.log`.
 
-## Settings
-`SKSE/Plugins/ModMenus.ini`:
-- `[General] uOpenKey`: the keyboard key that opens the list (DirectInput scan code; 197 = Pause, 0 = none).
-- `[Keys]`: per entry id, a key to use instead of reading it (only for a menu whose key can't be read), e.g.
-  `obody = Shift+O`.
+## Settings (MCM)
+With [MCM Helper](https://www.nexusmods.com/skyrimspecialedition/mods/53000) and SkyUI, Mod Menus has an MCM page:
+- **Settings:** where MOD MENUS shows in the Tween menu (Character / Inventory / Journal / World section, first or
+  last; World, last by default; applies from the next game start), the keyboard key that opens the list (Pause by
+  default), and a button that reads the menu files again.
+- **Menus:** every listed menu with what picking it does right now ("Shift+O (from OBody.json)", "mod event X"). For a
+  menu whose key can't be read or reads wrong, set the key it really opens with; "Use the mod's own key again" undoes it.
+- **Add a menu:** name, category, its key (with Shift / Ctrl / Alt) or its mod event, and whether to turn on Pad
+  Pointer. Menus added here can be removed on the Menus page.
+
+Where it's stored: the settings are MCM Helper's (`MCM/Settings/ModMenus.ini` over the defaults in
+`MCM/Config/ModMenus/settings.ini`; both plain INI files, so they can be edited without MCM Helper too). Your keys
+and added menus are in `SKSE/Plugins/ModMenus/User.json` (`"keys": {"<entry id>": "Shift+O"}` and `"menus": [...]`
+in the entry format), which the mod never ships, so updates keep it.
 
 ## Requirements
 - [SKSE64](https://skse.silverlock.org/)
 - [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444)
 - [UIExtensions](https://www.nexusmods.com/skyrimspecialedition/mods/17561) (the list menu)
 - Recommended: [Tween Menu Overhaul](https://www.nexusmods.com/skyrimspecialedition/mods/143275) (the MOD MENUS entry),
-  [Pad Pointer](https://github.com/MyDataTrends/PadPointer) (controller as a mouse in menus that need one)
+  [Pad Pointer](https://github.com/MyDataTrends/PadPointer) (controller as a mouse in menus that need one),
+  [MCM Helper](https://www.nexusmods.com/skyrimspecialedition/mods/53000) and
+  [SkyUI](https://www.nexusmods.com/skyrimspecialedition/mods/12604) (the settings page)
 
 Built with CommonLibSSE-NG for Skyrim SE and AE. Tested on Skyrim 1.6.1170 (Steam).
 
 ## Building
 `plugin/`: Visual Studio 2022 with vcpkg, `cmake --preset relwithdebinfo` and
 `cmake --build build/relwithdebinfo --config RelWithDebInfo`. `Scripts/Source/`: Papyrus (imports UIExtensions'
-sources). `ModMenus.esp` (one quest) is built by the author's own tooling and included in the release; `data/` holds
-the entry files, the ini and the Tween Menu Overhaul entry.
+sources; `ModMenus_MCM` extends MCM Helper's `MCM_ConfigBase`). `ModMenus.esp` (the main quest and the MCM quest) is
+built by the author's own tooling and included in the release; `data/` holds the entry files, the MCM page and its
+defaults, and the Tween Menu Overhaul entry.
 
 ## License
 MIT, see [LICENSE](LICENSE). Use it, change it, include it in your lists and mods.

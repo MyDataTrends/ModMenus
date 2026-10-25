@@ -1,0 +1,102 @@
+{
+  "modName": "ModMenus",
+  "displayName": "Mod Menus",
+  "minMcmVersion": 11,
+  "pages": [
+    {
+      "pageDisplayName": "Settings",
+      "cursorFillMode": "topToBottom",
+      "content": [
+        { "type": "header", "text": "Tween menu entry" },
+        {
+          "id": "iTweenSection:General", "text": "Section", "type": "enum",
+          "help": "Where MOD MENUS shows in Tween Menu Overhaul. Takes effect the next time the game starts.",
+          "valueOptions": { "options": ["Character (top)", "Inventory (left)", "Journal (right)", "World (bottom)"], "sourceType": "ModSettingInt" }
+        },
+        {
+          "id": "iTweenPosition:General", "text": "Position", "type": "enum",
+          "help": "First or last in that section. Takes effect the next time the game starts.",
+          "valueOptions": { "options": ["First", "Last"], "sourceType": "ModSettingInt" }
+        },
+        { "type": "header", "text": "Opening the list" },
+        {
+          "id": "iOpenKey:General", "text": "Keyboard key", "type": "keymap", "ignoreConflicts": true,
+          "help": "Opens the Mod Menus list (Pause by default). On a controller, use the Tween menu entry.",
+          "valueOptions": { "sourceType": "ModSettingInt" }
+        },
+        { "type": "header", "text": "Maintenance" },
+        {
+          "text": "Read the menu files again", "type": "text",
+          "help": "After adding or changing a file in SKSE/Plugins/ModMenus/. What was found is written to ModMenus.log.",
+          "action": { "type": "CallFunction", "function": "ReloadEntries" }
+        }
+      ]
+    },
+    {
+      "pageDisplayName": "Menus",
+      "cursorFillMode": "topToBottom",
+      "content": [
+        {
+          "id": "iPick:Menus", "text": "Menu", "type": "enum",
+          "help": "Every menu Mod Menus lists (only those whose mod is installed).",
+          "valueOptions": { "options": ["-"], "sourceType": "ModSettingInt" }
+        },
+        {
+          "id": "sKey:Menus", "text": "Opens with", "type": "text",
+          "help": "What picking it does now. Keys are read from the mod's own config each time, so rebinding it in that mod is enough.",
+          "valueOptions": { "sourceType": "ModSettingString" }
+        },
+        { "type": "header", "text": "Your own key for it" },
+        {
+          "id": "iKey:Menus", "text": "Key", "type": "keymap", "ignoreConflicts": true,
+          "help": "Only needed when its key can't be read or reads wrong. Set the key the menu really opens with.",
+          "valueOptions": { "sourceType": "ModSettingInt" }
+        },
+        { "id": "bShift:Menus", "text": "with Shift", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } },
+        { "id": "bCtrl:Menus", "text": "with Ctrl", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } },
+        { "id": "bAlt:Menus", "text": "with Alt", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } },
+        { "text": "Use this key", "type": "text", "action": { "type": "CallFunction", "function": "UseKey" } },
+        { "text": "Use the mod's own key again", "type": "text", "action": { "type": "CallFunction", "function": "ClearKey" } },
+        { "type": "header", "text": "Menus you added" },
+        {
+          "text": "Remove this menu", "type": "text", "help": "Only for menus added on the Add a menu page.",
+          "action": { "type": "CallFunction", "function": "RemoveMenu" }
+        }
+      ]
+    },
+    {
+      "pageDisplayName": "Add a menu",
+      "cursorFillMode": "topToBottom",
+      "content": [
+        { "type": "header", "text": "A mod menu that isn't listed" },
+        {
+          "id": "sLabel:Add", "text": "Name", "type": "input", "help": "How it shows in the list.",
+          "valueOptions": { "sourceType": "ModSettingString" }
+        },
+        {
+          "id": "iCategory:Add", "text": "Category", "type": "enum",
+          "valueOptions": { "options": ["My Menus"], "sourceType": "ModSettingInt" }
+        },
+        {
+          "id": "iKey:Add", "text": "Its key", "type": "keymap", "ignoreConflicts": true,
+          "help": "The key that opens that menu (see its mod's settings).",
+          "valueOptions": { "sourceType": "ModSettingInt" }
+        },
+        { "id": "bShift:Add", "text": "with Shift", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } },
+        { "id": "bCtrl:Add", "text": "with Ctrl", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } },
+        { "id": "bAlt:Add", "text": "with Alt", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } },
+        {
+          "id": "sEvent:Add", "text": "Or its mod event", "type": "input",
+          "help": "Advanced: a mod event that opens the menu, used instead of the key.",
+          "valueOptions": { "sourceType": "ModSettingString" }
+        },
+        {
+          "id": "bPointer:Add", "text": "Use Pad Pointer", "type": "toggle",
+          "help": "For menus that only take mouse and keyboard: turns Pad Pointer on (if installed) so the controller steers it.",
+          "valueOptions": { "sourceType": "ModSettingBool" }
+        },
+        { "text": "Add menu", "type": "text", "action": { "type": "CallFunction", "function": "AddMenu" } }
+      ]
+    }
+  ]
+}

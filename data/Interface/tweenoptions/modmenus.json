@@ -1,7 +1,7 @@
 {
-	"papyrus_event": "ModMenus_Open",
-	"menuName": "MOD MENUS",
-	"icon": "skills",
-	"priority": 40,
-	"category": "bottom"
+  "category": "bottom",
+  "icon": "skills",
+  "menuName": "MOD MENUS",
+  "papyrus_event": "ModMenus_Open",
+  "priority": 100000
 }

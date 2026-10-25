@@ -40,7 +40,12 @@ namespace
 
 	const fs::path DATA = "Data";
 	const fs::path ENTRIES = DATA / "SKSE" / "Plugins" / "ModMenus";
-	const char* INI = ".\\Data\\SKSE\\Plugins\\ModMenus.ini";
+	// what the MCM changes (and menus added there) live in User.json; the mod never ships it, so updates keep it
+	const fs::path USER_FILE = ENTRIES / "User.json";
+	const fs::path TWEEN = DATA / "Interface" / "tweenoptions" / "modmenus.json";
+	// settings: MCM Helper's ModSettings, the user's values over the defaults (readable without MCM Helper too)
+	const char* MCM_USER = ".\\Data\\MCM\\Settings\\ModMenus.ini";
+	const char* MCM_DEFAULTS = ".\\Data\\MCM\\Config\\ModMenus\\settings.ini";
 
 	struct Entry
 	{
@@ -51,13 +56,24 @@ namespace
 
 	std::vector<Entry> g_entries;
 	std::vector<std::string> g_categories;
+	std::map<std::string, json> g_overrides;  // "keys" in User.json: entry id -> [DIK codes] or "Shift+O"
 
 	struct Resolved
 	{
 		int kind = -1;            // 0 keys, 1 mod event, -1 error
 		std::vector<int> keys;    // DirectInput scan codes, modifiers first
-		std::string event, error;
+		std::string event, error, source;
 	};
+
+	int Setting(const char* section, const char* key, int def)
+	{
+		char buf[32]{};
+		for (auto* f : { MCM_USER, MCM_DEFAULTS }) {
+			GetPrivateProfileStringA(section, key, "", buf, sizeof(buf), f);
+			if (buf[0]) return std::atoi(buf);
+		}
+		return def;
+	}
 
 	std::string Lower(std::string s)
 	{
@@ -126,6 +142,28 @@ namespace
 			if (vk != -1) return VkToDik(vk & 0xFF);
 		}
 		throw std::runtime_error(std::format("unknown key name '{}'", name));
+	}
+
+	std::string DikName(int dik)
+	{
+		static const std::map<int, std::string> N = { { 1, "Esc" }, { 14, "Backspace" }, { 15, "Tab" }, { 28, "Enter" },
+			{ 29, "Ctrl" }, { 41, "`" }, { 42, "Shift" }, { 54, "RShift" }, { 56, "Alt" }, { 57, "Space" }, { 87, "F11" },
+			{ 88, "F12" }, { 157, "RCtrl" }, { 184, "RAlt" }, { 197, "Pause" }, { 199, "Home" }, { 200, "Up" },
+			{ 201, "PageUp" }, { 203, "Left" }, { 205, "Right" }, { 207, "End" }, { 208, "Down" }, { 209, "PageDown" },
+			{ 210, "Insert" }, { 211, "Delete" } };
+		if (auto it = N.find(dik); it != N.end()) return it->second;
+		if (dik >= 59 && dik <= 68) return std::format("F{}", dik - 58);
+		UINT vk = MapVirtualKeyW((dik & 0x7F) | ((dik & 0x80) ? 0xE000 : 0), MAPVK_VSC_TO_VK_EX);
+		UINT ch = vk ? MapVirtualKeyW(vk, MAPVK_VK_TO_CHAR) & 0x7FFF : 0;
+		if (ch > 32 && ch < 127) return std::string(1, static_cast<char>(std::toupper(static_cast<int>(ch))));
+		return std::format("key {}", dik);
+	}
+
+	std::string ComboName(const std::vector<int>& keys)
+	{
+		std::string out;
+		for (int k : keys) out += (out.empty() ? "" : "+") + DikName(k);
+		return out;
 	}
 
 	int Number(const json& v)
@@ -213,28 +251,27 @@ namespace
 	{
 		Resolved r;
 		try {
-			if (e.open.contains("modevent")) {
+			if (e.open.contains("modevent") && !g_overrides.contains(e.id)) {  // your own key wins over a mod event too
 				r.kind = 1;
 				r.event = e.open["modevent"].get<std::string>();
 				return r;
 			}
-			const json& k = e.open.at("key");
+			const json k = e.open.value("key", json::object());
 			std::vector<int> keys;
-			// ModMenus.ini [Keys] <id> = Shift+O: the user's override for a menu whose key can't be read (or reads wrong)
-			char over[64]{};
-			GetPrivateProfileStringA("Keys", e.id.c_str(), "", over, sizeof(over), INI);
-			if (over[0]) {
-				for (auto& t : Split(over, "+")) keys.push_back(NameToDik(t));
-				std::ranges::stable_partition(keys, IsModifier);
-				r.kind = 0;
-				r.keys = keys;
-				return r;
+			auto combo = [&](const json& v) {  // [DIK codes] or "Shift+O"
+				if (v.is_array()) for (auto& x : v) keys.push_back(Number(x));
+				else for (auto& t : Split(v.get<std::string>(), "+")) keys.push_back(NameToDik(t));
+			};
+			// User.json "keys": the user's own key for a menu whose key can't be read (or reads wrong); set in the MCM
+			if (auto it = g_overrides.find(e.id); it != g_overrides.end()) {
+				combo(it->second);
+				r.source = "your key";
 			}
 			// "file": one path or candidates (the first that exists); "default": the combo when the mod has not written
 			// its config yet (several write it on first run)
 			fs::path p;
 			std::error_code ec;
-			if (k.contains("file")) {
+			if (keys.empty() && k.contains("file")) {
 				for (auto& f : k["file"].is_array() ? k["file"] : json::array({ k["file"] })) {
 					if (fs::exists(DATA / f.get<std::string>(), ec)) {
 						p = DATA / f.get<std::string>();
@@ -253,14 +290,16 @@ namespace
 					if (!k.contains("default")) throw;
 				}
 			}
-			std::string fixed = k.value("fixed", "");
-			if (fixed.empty() && !haveRaw) {
+			if (!keys.empty()) {
+			} else if (k.contains("fixed")) {  // the mod has no key setting: the key it listens to
+				combo(k["fixed"]);
+				r.source = "fixed";
+			} else if (!haveRaw) {  // its config not written yet (several mods write it on first run)
 				if (!k.contains("default")) throw std::runtime_error("its config file was not found");
-				fixed = k["default"].get<std::string>();
-			}
-			if (!fixed.empty()) {  // the mod has no key setting (or none written yet): the key it listens to
-				for (auto& t : Split(fixed, "+")) keys.push_back(NameToDik(t));
+				combo(k["default"]);
+				r.source = "the mod's default";
 			} else {
+				r.source = "from " + p.filename().string();
 				auto fmt = k.at("format").get<std::string>();
 				auto list = [&](const json& v) {
 					std::vector<json> out;
@@ -316,6 +355,7 @@ namespace
 	{
 		g_entries.clear();
 		g_categories.clear();
+		g_overrides.clear();
 		std::vector<fs::path> files;
 		std::error_code ec;
 		for (auto& f : fs::directory_iterator(ENTRIES, ec)) {
@@ -325,6 +365,7 @@ namespace
 		for (auto& f : files) {
 			try {
 				json doc = ParseLoose(ReadText(f));
+				for (auto& [id, keys] : doc.value("keys", json::object()).items()) g_overrides[id] = keys;
 				for (auto& m : doc.value("menus", json::array())) {
 					Entry e{ m.value("id", ""), m.value("label", ""), m.value("category", "Other"), f.filename().string(),
 						m.value("open", json::object()), m.value("pointer", false) };
@@ -399,12 +440,145 @@ namespace
 		return Resolve(g_entries[i]).error;
 	}
 
-	std::int32_t GetOpenKey(RE::StaticFunctionTag*)
-	{
-		return static_cast<std::int32_t>(GetPrivateProfileIntA("General", "uOpenKey", 197, INI));  // Pause
-	}
+	std::int32_t GetOpenKey(RE::StaticFunctionTag*) { return Setting("General", "iOpenKey", 197); }  // Pause
 
 	void Reload(RE::StaticFunctionTag*) { Load(); }
+
+	// ── MCM: Tween entry, the user's keys, menus added in game ──────────────────────────────────────────────────
+	// The Tween Menu Overhaul entry: section (top/left/right/bottom) and first or last in it (its lower priority shows
+	// earlier; its own entries use 40-9999). Written at startup and when changed in the MCM.
+	void ApplyTween()
+	{
+		static const char* SECTIONS[] = { "top", "left", "right", "bottom" };
+		json j = { { "papyrus_event", "ModMenus_Open" }, { "menuName", "MOD MENUS" }, { "icon", "skills" },
+			{ "priority", Setting("General", "iTweenPosition", 1) ? 100000 : 1 },
+			{ "category", SECTIONS[std::clamp(Setting("General", "iTweenSection", 3), 0, 3)] } };
+		auto text = j.dump(2);
+		try {
+			if (ReadText(TWEEN) == text) return;
+		} catch (const std::exception&) {
+		}
+		std::error_code ec;
+		fs::create_directories(TWEEN.parent_path(), ec);
+		std::ofstream(TWEEN, std::ios::binary) << text;
+		LOG_INFO("Tween entry: {} {}", j["category"].get<std::string>(), j["priority"].get<int>() == 1 ? "first" : "last");
+	}
+
+	json ReadUser()
+	{
+		std::error_code ec;
+		return fs::exists(USER_FILE, ec) ? ParseLoose(ReadText(USER_FILE)) : json::object();
+	}
+
+	void WriteUser(const json& j)
+	{
+		std::error_code ec;
+		fs::create_directories(ENTRIES, ec);
+		std::ofstream(USER_FILE, std::ios::binary) << j.dump(2);
+		Load();
+	}
+
+	std::vector<int> Combo(std::int32_t key, bool shift, bool ctrl, bool alt)
+	{
+		std::vector<int> keys;
+		if (ctrl) keys.push_back(29);
+		if (shift) keys.push_back(42);
+		if (alt) keys.push_back(56);
+		keys.push_back(key);
+		return keys;
+	}
+
+	bool Valid(std::int32_t i) { return i >= 0 && i < static_cast<std::int32_t>(g_entries.size()); }
+
+	// what picking menu i would do now, for the MCM: "Shift+O (from OBody.json)", "mod event X", "not read: ..."
+	std::string Describe(RE::StaticFunctionTag*, std::int32_t i)
+	{
+		if (!Valid(i)) return "";
+		auto r = Resolve(g_entries[i]);
+		if (r.kind < 0) return "not read: " + r.error;
+		if (r.kind == 1) return "mod event " + r.event;
+		return ComboName(r.keys) + " (" + r.source + ")";
+	}
+
+	bool IsUserMenu(RE::StaticFunctionTag*, std::int32_t i) { return Valid(i) && g_entries[i].file == USER_FILE.filename().string(); }
+
+	// returns "" when done, else why not
+	std::string SetKey(RE::StaticFunctionTag*, std::int32_t i, std::int32_t key, bool shift, bool ctrl, bool alt)
+	{
+		if (!Valid(i)) return "no menu picked";
+		if (key <= 0 || IsModifier(key)) return "pick a key first (Shift, Ctrl and Alt are the switches)";
+		try {
+			auto u = ReadUser();
+			u["keys"][g_entries[i].id] = Combo(key, shift, ctrl, alt);
+			WriteUser(u);
+			return "";
+		} catch (const std::exception& ex) {
+			return ex.what();
+		}
+	}
+
+	std::string ClearKey(RE::StaticFunctionTag*, std::int32_t i)
+	{
+		if (!Valid(i)) return "no menu picked";
+		try {
+			auto u = ReadUser();
+			if (!u.contains("keys") || !u["keys"].contains(g_entries[i].id)) return "it already uses the mod's own key";
+			u["keys"].erase(g_entries[i].id);
+			WriteUser(u);
+			return "";
+		} catch (const std::exception& ex) {
+			return ex.what();
+		}
+	}
+
+	std::string AddMenu(RE::StaticFunctionTag*, std::string label, std::string category, std::int32_t key, bool shift,
+		bool ctrl, bool alt, std::string modEvent, bool pointer)
+	{
+		label = Trim(label);
+		modEvent = Trim(modEvent);
+		if (label.empty()) return "give it a name first";
+		if (std::ranges::any_of(g_entries, [&](const Entry& e) { return Lower(e.label) == Lower(label); })) {
+			return "a menu with that name is already listed";
+		}
+		if (modEvent.empty() && (key <= 0 || IsModifier(key))) return "pick its key (or type its mod event)";
+		std::string id = "user-";
+		for (char c : Lower(label)) id += std::isalnum(static_cast<unsigned char>(c)) ? c : '-';
+		json open = modEvent.empty() ? json{ { "key", { { "fixed", Combo(key, shift, ctrl, alt) } } } }
+		                             : json{ { "modevent", modEvent } };
+		try {
+			auto u = ReadUser();
+			u["menus"].push_back({ { "id", id }, { "label", label }, { "category", category.empty() ? "My Menus" : category },
+				{ "pointer", pointer }, { "open", open } });
+			WriteUser(u);
+			LOG_INFO("added '{}' in the MCM", label);
+			return "";
+		} catch (const std::exception& ex) {
+			return ex.what();
+		}
+	}
+
+	std::string RemoveMenu(RE::StaticFunctionTag* tag, std::int32_t i)
+	{
+		if (!IsUserMenu(tag, i)) return "only menus added here can be removed";
+		try {
+			auto u = ReadUser();
+			auto& menus = u["menus"];
+			auto id = g_entries[i].id;
+			for (auto it = menus.begin(); it != menus.end(); ++it) {
+				if (it->value("id", "") == id) {
+					menus.erase(it);
+					break;
+				}
+			}
+			if (u.contains("keys")) u["keys"].erase(id);
+			WriteUser(u);
+			return "";
+		} catch (const std::exception& ex) {
+			return ex.what();
+		}
+	}
+
+	void SetTween(RE::StaticFunctionTag*) { ApplyTween(); }
 
 	bool RegisterFunctions(RE::BSScript::IVirtualMachine* vm)
 	{
@@ -417,6 +591,13 @@ namespace
 		vm->RegisterFunction("GetError", cls, GetError);
 		vm->RegisterFunction("GetOpenKey", cls, GetOpenKey);
 		vm->RegisterFunction("Reload", cls, Reload);
+		vm->RegisterFunction("Describe", cls, Describe);
+		vm->RegisterFunction("IsUserMenu", cls, IsUserMenu);
+		vm->RegisterFunction("SetKey", cls, SetKey);
+		vm->RegisterFunction("ClearKey", cls, ClearKey);
+		vm->RegisterFunction("AddMenu", cls, AddMenu);
+		vm->RegisterFunction("RemoveMenu", cls, RemoveMenu);
+		vm->RegisterFunction("SetTween", cls, SetTween);
 		return true;
 	}
 }
@@ -432,6 +613,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 		spdlog::set_default_logger(std::move(logger));
 	}
 	LOG_INFO("Mod Menus 1.0.0 loading");
+	ApplyTween();  // before Tween Menu Overhaul reads its entries
 	SKSE::GetPapyrusInterface()->Register(RegisterFunctions);
 	SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message* msg) {
 		if (msg->type == SKSE::MessagingInterface::kDataLoaded) {
